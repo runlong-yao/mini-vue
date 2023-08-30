@@ -96,4 +96,4 @@ export const createApp = (...args) => {
   return ensureRenderer().createApp(...args);
 };
 
-export * from "@mini-vue/runtime-core"
+export * from "@mini-vue/runtime-core";
