@@ -30,10 +30,12 @@ function createGetter(isReadonly = false, shallow = false) {
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly;
     } else if (
+      //查找有没有Map记录
       isExistInReactiveMap() ||
       isExistInReadonlyMap() ||
       isExistInShallowReadonlyMap()
     ) {
+      //获取原始对象
       return target;
     }
 

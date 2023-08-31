@@ -17,14 +17,13 @@ export function queueJob(job) {
 }
 
 function queueFlush() {
-  // 如果同时触发了两个组件的更新的话
-  // 这里就会触发两次 then （微任务逻辑）
-  // 但是着是没有必要的
   // 我们只需要触发一次即可处理完所有的 job 调用
   // 所以需要判断一下 如果已经触发过 nextTick 了
   // 那么后面就不需要再次触发一次 nextTick 逻辑了
   if (isFlushPending) return;
   isFlushPending = true;
+
+  //以microtask为单位清理任务
   nextTick(flushJobs);
 }
 
@@ -39,9 +38,10 @@ function queueCb(cb, activeQueue) {
   activeQueue.push(cb);
 
   // 然后执行队列里面所有的 job
-  queueFlush()
+  queueFlush();
 }
 
+//依次执行queue中的job,job对应的一般是effect.run
 function flushJobs() {
   isFlushPending = false;
 
@@ -49,6 +49,8 @@ function flushJobs() {
   // 所以这里执行的job 是在渲染前的
   // 也就意味着执行这里的 job 的时候 页面还没有渲染
   flushPreFlushCbs();
+
+  //疑问：flushPreFlushCbs和底下循环有区别么？
 
   // 这里是执行 queueJob 的
   // 比如 render 渲染就是属于这个类型的 job

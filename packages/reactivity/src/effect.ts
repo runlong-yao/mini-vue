@@ -1,15 +1,31 @@
 import { createDep } from "./dep";
 import { extend } from "@mini-vue/shared";
 
+//调用run方法的时候切换activeEffect
+//当前激活的ReactiveEffect
 let activeEffect = void 0;
 let shouldTrack = false;
+
+//调用路径：createGetter->track->targetMap
+//结构: WeakMap<T,D>
+//T 是target
+//D 是depsMap;D = new Map<E,V>()
+//E 是属性键值
+//V 是Set; V = new Set<F>
+//F 是ReactiveEffect
+//记录某个对象的键值，被哪些Effect依赖
+//目的是为了方便查询：响应键值被哪些Effect依赖
+//可以用于触发更新,比如：const User = {age:1};User.age=2修改时 -> 触发依赖于User.age这个路径的Effect更新
 const targetMap = new WeakMap();
 
-// 用于依赖收集
+// ReactiveEffect管理回调触发
+//
 export class ReactiveEffect {
   active = true;
   deps = [];
   public onStop?: () => void;
+
+  //scheduler的核心代码一般是() => effect.run()
   constructor(public fn, public scheduler?) {
     console.log("创建 ReactiveEffect 对象");
   }
@@ -57,6 +73,9 @@ export class ReactiveEffect {
   }
 }
 
+//DEP
+//EFFECT
+
 function cleanupEffect(effect) {
   // 找到所有依赖这个 effect 的响应式对象
   // 从这些响应式对象里面把 effect 给删除掉
@@ -86,13 +105,15 @@ export function stop(runner) {
   runner.effect.stop();
 }
 
+//疑问：为啥传个type进来，type没啥用
 export function track(target, type, key) {
   if (!isTracking()) {
     return;
   }
+  //targetMap的结构是 Map<目标对象,Map<键值,Set<Dep>>>
+  //按照对象的键值进行存储
   console.log(`触发 track -> target: ${target} type:${type} key:${key}`);
-  // 1. 先基于 target 找到对应的 dep
-  // 如果是第一次的话，那么就需要初始化
+
   let depsMap = targetMap.get(target);
   if (!depsMap) {
     // 初始化 depsMap 的逻辑
@@ -103,6 +124,7 @@ export function track(target, type, key) {
   let dep = depsMap.get(key);
 
   if (!dep) {
+    //Set
     dep = createDep();
 
     depsMap.set(key, dep);
@@ -111,6 +133,8 @@ export function track(target, type, key) {
   trackEffects(dep);
 }
 
+//设置targetMap
+//ReactiveEffect记录的依赖集
 export function trackEffects(dep) {
   // 用 dep 来存放所有的 effect
 
@@ -139,11 +163,13 @@ export function trigger(target, type, key) {
 
   // 暂时只实现了 GET 类型
   // get 类型只需要取出来就可以
+  //这是Set类型
   const dep = depsMap.get(key);
 
   // 最后收集到 deps 内
   deps.push(dep);
 
+  //所有dep中元素的数组版本，你可以理解为它就是dep
   const effects: Array<any> = [];
   deps.forEach((dep) => {
     // 这里解构 dep 得到的是 dep 内部存储的 effect
@@ -158,6 +184,7 @@ export function isTracking() {
   return shouldTrack && activeEffect !== undefined;
 }
 
+//触发effect(scheduler和run)
 export function triggerEffects(dep) {
   // 执行收集到的所有的 effect 的 run 方法
   for (const effect of dep) {

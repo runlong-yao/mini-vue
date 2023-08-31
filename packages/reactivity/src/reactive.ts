@@ -60,12 +60,14 @@ export function toRaw(value) {
   return value[ReactiveFlags.RAW];
 }
 
+//proxyMap是缓存数据的Map
+//baseHandlers是实际的代理方法
 function createReactiveObject(target, proxyMap, baseHandlers) {
   // 核心就是 proxy
   // 目的是可以侦听到用户 get 或者 set 的动作
 
   // 如果命中的话就直接返回就好了
-  // 使用缓存做的优化点
+  // 暂存的目的是记录有哪些对象已经序列化
   const existingProxy = proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;
