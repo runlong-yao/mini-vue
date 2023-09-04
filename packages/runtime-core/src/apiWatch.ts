@@ -19,6 +19,7 @@ function doWatch(source) {
     effect.run();
   };
 
+  //延迟计算队列
   const scheduler = () => queuePreFlushCb(job);
 
   let cleanup;

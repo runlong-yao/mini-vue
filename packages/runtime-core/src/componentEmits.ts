@@ -6,13 +6,14 @@ export function emit(instance, event: string, ...rawArgs) {
   // ex: event -> click 那么这里取的就是 onClick
   // 让事情变的复杂一点如果是烤肉串命名的话，需要转换成  change-page -> changePage
   // 需要得到事件名称
+  //camelize: change-page->changePage
   let handler = props[toHandlerKey(camelize(event))];
 
-  // 如果上面没有匹配的话 那么在检测一下 event 是不是 kebab-case 类型
+  // 如果上面没有匹配的话 那么在检测一下 event 是不是 camel-case 类型
   if (!handler) {
-    handler = props[(toHandlerKey(hyphenate(event)))]
+    //hyphenate:onTest->on-test
+    handler = props[toHandlerKey(hyphenate(event))];
   }
-
 
   if (handler) {
     handler(...rawArgs);

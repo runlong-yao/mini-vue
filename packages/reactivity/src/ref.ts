@@ -6,6 +6,8 @@ import { reactive } from "./reactive";
 export class RefImpl {
   private _rawValue: any;
   private _value: any;
+  //Set
+  //Set<ReactiveEffect>()
   public dep;
   public __v_isRef = true;
 
@@ -50,12 +52,18 @@ function createRef(value) {
   return refImpl;
 }
 
+/**
+ * 触发computed,ref依赖的effect
+ * @param ref
+ */
 export function triggerRefValue(ref) {
+  //ref.dep Set<ReactiveEffect>
   triggerEffects(ref.dep);
 }
 
 export function trackRefValue(ref) {
   if (isTracking()) {
+    //Effect和dep互加
     trackEffects(ref.dep);
   }
 }

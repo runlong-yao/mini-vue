@@ -16,12 +16,18 @@ let shouldTrack = false;
 //记录某个对象的键值，被哪些Effect依赖
 //目的是为了方便查询：响应键值被哪些Effect依赖
 //可以用于触发更新,比如：const User = {age:1};User.age=2修改时 -> 触发依赖于User.age这个路径的Effect更新
+//reactive的被依赖存储在targetMap中
+//ref的被依赖存储在ReplImp的dep
 const targetMap = new WeakMap();
 
 // ReactiveEffect管理回调触发
 //
 export class ReactiveEffect {
   active = true;
+  //Array<Set<ReactiveEffect>>
+  //记录的是所有track的deps
+  //用于清除deps对effect的依赖
+  //因为reactiveEffect是可以在运行时被销毁的
   deps = [];
   public onStop?: () => void;
 
@@ -135,6 +141,7 @@ export function track(target, type, key) {
 
 //设置targetMap
 //ReactiveEffect记录的依赖集
+//dep类型：Set<ReactiveEffect>
 export function trackEffects(dep) {
   // 用 dep 来存放所有的 effect
 
@@ -147,6 +154,9 @@ export function trackEffects(dep) {
   // shouldTrack = !dep.has(activeEffect!);
   if (!dep.has(activeEffect)) {
     dep.add(activeEffect);
+    //effect是ReactiveEffect
+    //effect.dep 是Array
+    //effect.dep[0]是Set
     (activeEffect as any).deps.push(dep);
   }
 }
@@ -185,6 +195,8 @@ export function isTracking() {
 }
 
 //触发effect(scheduler和run)
+//dep是Set类型
+//triggerEffects实质是执行run或者scheduler
 export function triggerEffects(dep) {
   // 执行收集到的所有的 effect 的 run 方法
   for (const effect of dep) {

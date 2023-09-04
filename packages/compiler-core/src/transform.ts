@@ -39,15 +39,12 @@ function traverseNode(node: any, context) {
 
     case NodeTypes.ROOT:
     case NodeTypes.ELEMENT:
-
       traverseChildren(node, context);
       break;
 
     default:
       break;
   }
-
-
 
   let i = exitFns.length;
   // i-- 这个很巧妙

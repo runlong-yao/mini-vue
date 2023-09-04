@@ -21,6 +21,8 @@ function parseChildren(context, ancestors) {
   console.log("开始解析 children");
   const nodes: any = [];
 
+  //<div></div>
+  //</div>
   while (!isEnd(context, ancestors)) {
     let node;
     const s = context.source;
@@ -29,6 +31,7 @@ function parseChildren(context, ancestors) {
       // 看看如果是 {{ 开头的话，那么就是一个插值， 那么去解析他
       node = parseInterpolation(context);
     } else if (s[0] === "<") {
+      //这个分支应该走不到
       if (s[1] === "/") {
         // 这里属于 edge case 可以不用关心
         // 处理结束标签
@@ -40,11 +43,13 @@ function parseChildren(context, ancestors) {
           continue;
         }
       } else if (/[a-z]/i.test(s[1])) {
+        //解析子标签
         node = parseElement(context, ancestors);
       }
     }
 
     if (!node) {
+      //文本节点
       node = parseText(context);
     }
 
@@ -54,15 +59,21 @@ function parseChildren(context, ancestors) {
   return nodes;
 }
 
+//检查是否是闭合标签
 function isEnd(context: any, ancestors) {
   // 检测标签的节点
   // 如果是结束标签的话，需要看看之前有没有开始标签，如果有的话，那么也应该结束
   // 这里的一个 edge case 是 <div><span></div>
+
   // 像这种情况下，其实就应该报错
   const s = context.source;
+  //<div><div></div></div>
+  //<div></span></div>
+  //匹配</div>
   if (context.source.startsWith("</")) {
     // 从后面往前面查
     // 因为便签如果存在的话 应该是 ancestors 最后一个元素
+    // 找一个匹配标签
     for (let i = ancestors.length - 1; i >= 0; --i) {
       if (startsWithEndTagOpen(s, ancestors[i].tag)) {
         return true;
@@ -74,6 +85,12 @@ function isEnd(context: any, ancestors) {
   return !context.source;
 }
 
+/**
+ * 解析元素
+ * @param context
+ * @param ancestors
+ * @returns
+ */
 function parseElement(context, ancestors) {
   // 应该如何解析 tag 呢
   // <div></div>
@@ -106,6 +123,12 @@ function startsWithEndTagOpen(source: string, tag: string) {
   );
 }
 
+/**
+ * 解析标签，转为对象
+ * @param context
+ * @param type
+ * @returns
+ */
 function parseTag(context: any, type: TagType): any {
   // 发现如果不是 > 的话，那么就把字符都收集起来 ->div
   // 正则
@@ -168,6 +191,11 @@ function parseInterpolation(context: any) {
   };
 }
 
+/**
+ * 解析纯文本部分
+ * @param context
+ * @returns
+ */
 function parseText(context): any {
   console.log("解析 text", context);
 
@@ -208,6 +236,7 @@ function parseTextData(context: any, length: number): any {
   return rawText;
 }
 
+//清理source
 function advanceBy(context, numberOfCharacters) {
   console.log("推进代码", context, numberOfCharacters);
   context.source = context.source.slice(numberOfCharacters);

@@ -9,6 +9,8 @@ import {
 export function generate(ast, options = {}) {
   // 先生成 context
   const context = createCodegenContext(ast, options);
+  //mode = 'function'
+  //push是添加代码
   const { push, mode } = context;
 
   // 1. 先生成 preambleContext

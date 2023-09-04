@@ -18,6 +18,9 @@ export function createRenderer(options) {
     createText: hostCreateText,
   } = options;
 
+  //调用关系
+  //render->patch
+
   //底下所有方法都是为render服务
   const render = (vnode, container) => {
     console.log("调用 patch");
